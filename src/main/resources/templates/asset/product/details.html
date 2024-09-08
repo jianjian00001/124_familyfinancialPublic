@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>理财产品</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+          content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8"/>
+    <link rel="stylesheet" href="/static/css/font.css">
+    <link rel="stylesheet" href="/static/css/xadmin.css">
+    <script type="text/javascript" src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/lib/layui/layui.js" charset="utf-8"></script>
+    <script type="text/javascript" src="/static/js/xadmin.js"></script>
+    <script type="text/javascript" src="/static/js/index.js"></script>
+    <style>
+        table {
+            table-layout: fixed;
+        }
+
+        table td.remark {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        table td, table th {
+            text-align: center !important;
+        }
+
+        .layui-laypage button {
+            background: #009688;
+            color: white;
+            border: 1px #009688 solid;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="x-nav">
+      <span class="layui-breadcrumb">
+        <a href="">首页</a>
+        <a href="">账户总览</a>
+        <a>
+          <cite>理财产品</cite></a>
+      </span>
+    <a class="layui-btn layui-btn-small" style="line-height:1.6em;margin-top:3px;float:right"
+       href="javascript:location.reload();" title="刷新">
+        <i class="layui-icon" style="line-height:30px">ဂ</i></a>
+</div>
+<div class="x-body">
+    <div class="layui-row">
+        <blockquote class="layui-elem-quote">欢迎您，
+        <span id="username1"></span>：您的资产总额为
+        <span  id="money"></span> ！根据个人资产配置的黄金法则，您可以将您资产的30%也就是
+        <span id="money3"></span> 元用来理财，系统将根据您的需求推荐给您相关的产品
+        </blockquote>
+        <form class="layui-form layui-col-md12 x-so">
+            <div class="layui-input-inline">
+                <select id="productType">
+                    <option value="-1">选择风险等级</option>
+                </select>
+            </div>
+            <button class="layui-btn" type="button" lay-submit="" lay-filter="sreach" onclick="getProducts()">
+                <i class="layui-icon">&#xe615;</i>搜索
+            </button>
+            <button class="layui-btn layui-btn-primary" type="reset">
+                <i class="layui-icon">&#xe640;</i>重置
+            </button>
+        </form>
+    </div>
+    <xblock>
+    <button class="layui-btn" onclick="x_admin_show('新增理财产品','asset_product_addProduct.html','460px','80%')"><i class="layui-icon"></i>添加
+    </button>
+    <span class="x-right" style="line-height:40px">共有数据：<span id="num"></span> 条</span>
+    </xblock>
+    <table class="layui-table" id="bills">
+        <thead>
+        <tr>
+        <th style="width: 6%;">序号</th>
+        <th style="width: 15%;">标题</th>
+        <th style="width: 10%;">风险等级</th>
+        <th style="width: 10%;">风险描述</th>
+        <th style="width: 12%;">亏损概率</th>
+        <th style="width: 10%;">操作</th>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <!--<div id="barDemo">-->
+        <!--<a title="编辑" onclick="x_admin_show('编辑','income_add.html?index=' + (index + 1) + '#2','460px','80%')" href="javascript:;">-->
+            <!--<i class="layui-icon">&#xe642;</i>-->
+        <!--</a>-->
+        <!--<a title="删除" onclick="del(this,' + item.id + ')" href="javascript:;">-->
+            <!--<i class="layui-icon">&#xe640;</i>-->
+        <!--</a>-->
+    <!--</div>-->
+
+    <div id="pager" style="text-align: center;"></div>
+
+</div>
+<script>
+    getAllWays();
+    getMoney();
+    mPageSize = 10;
+    $(function () {
+        $("#username1").html(parent.sessionUser.username);
+        layer = layui.layer;
+        layui.use('laydate', function () {
+            var laydate = layui.laydate;
+            //执行一个laydate实例
+            laydate.render({
+                elem: '#start', //指定元素
+                max: 0
+            });
+            laydate.render({
+                elem: '#end', //指定元素
+                max: 0
+            });
+        });
+        getProducts();
+    });
+
+    function getMoney() {
+        $.ajaxSettings.async = false;
+        $.get("/curaccount/getMoney",function (res) {
+            if (res.code == 200){
+                var html1 = '';
+                var html2 = '';
+                html1 += res.data.money;
+                html2 += res.data.money3;
+
+            }else {
+
+            }
+            $("#money").html(html1);
+            $("#money3").html(html2);
+        });
+        $.ajaxSettings.async = true;
+    }
+    function getProducts(pageNo) {
+        pageNo = pageNo || 1;
+        let level = $("#productType").val() == -1 ? null : $("#productType").val();
+         console.log(level);
+        $.post("/bills/getProducts/" + pageNo + "/" + mPageSize+ "/" + level, function (res) {
+            // console.log(res);
+            if (res.code == 200) {
+                if (res.total == 0) {
+                    layer.msg(res.msg);
+                }
+                $("#num").text(res.total);
+                fillTable(res.datas, (pageNo - 1) * mPageSize);
+                layui.use('laypage', function () {
+                    var laypage = layui.laypage;
+
+                    //执行一个laypage实例
+                    laypage.render({
+                        elem: 'pager', //注意，这里的 test1 是 ID，不用加 # 号
+                        count: res.total, //数据总数，从服务端得到
+                        limit: mPageSize,
+                        curr: pageNo,
+                        prev: "<",
+                        next: ">",
+                        groups: 2,
+                        limits: [10, 30, 50, 100],
+                        layout: ['prev', 'page', 'next', 'limit', 'refresh', 'skip'],
+                        skip: true, //是否开启跳页
+                        jump: function (obj, isfirst) {
+                            if (!isfirst) {
+                                mPageSize = obj.limit;
+                                getProducts(obj.curr, obj.limit)
+                            }
+                        }
+                    });
+                });
+            } else {
+                layer.msg(res.msg);
+            }
+        });
+    }
+
+    function fillTable(products, beginIndex) {
+        var html = "";
+        $.each(products, function (index, item) {
+            html += '<tr>' +
+                '            <td>' + (index + 1 + beginIndex) + '</td>' +
+                '            <td>' + item.name + '</td>' +
+                '            <td>' + item.level + '</td>' +
+                '            <td class="remark" title=' + item.remark + '>' + item.remark + '</td>' +
+                '            <td>' + item.loss + '</td>' +
+                '            <td style="display: none">' + item.id + '</td>' +
+                '            <td class="td-manage">' +
+                '                <a title="编辑" onclick="x_admin_show(\'购买\',\'asset_product__buyProduct.html?index=' + (index + 1) + '#2\',\'460px\',\'80%\')" href="javascript:;">' +
+                '                    <i class="layui-icon">&#xe642;</i>' +
+                '                </a>' +
+                '                <a title="删除" onclick="del(this,' + item.id + ')" href="javascript:;">' +
+                '                    <i class="layui-icon">&#xe640;</i>' +
+                '                </a>' +
+                '            </td>'
+            '        </tr>';
+        })
+        $("#bills tbody").html(html);
+    }
+
+
+    /*删除*/
+    function del(obj, id) {
+        layer.confirm('确认要删除吗？', {title: false, closeBtn: false, skin: 'layui-layer-molv'}, function (index) {
+            var data = {"id": id}
+            $.post("/bills/delProduct", data, function (res) {
+                if (res.code == 200) {
+                    getProducts();
+                    layer.msg('删除成功!', {icon: 1, time: 1000});
+                } else {
+                    layer.msg("删除失败！", {icon: 2, time: 1000});
+                }
+            });
+
+        });
+    }
+</script>
+</body>
+
+</html>

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>账单添加</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+          content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8"/>
+
+    <link rel="stylesheet" href="/static/css/font.css">
+    <link rel="stylesheet" href="/static/css/xadmin.css">
+    <script type="text/javascript" src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/lib/layui/layui.js" charset="utf-8"></script>
+    <script type="text/javascript" src="/static/js/xadmin.js"></script>
+    <script type="text/javascript" src="/static/js/index.js"></script>
+    <style>
+        .layui-form{
+            padding: 20px 50px;
+        }
+    </style>
+</head>
+<body>
+<div class="layui-fluid">
+    <div class="layui-row">
+        <form action="" method="post" class="layui-form layui-form-pane">
+            <input type="hidden" name="roleid">
+            <div class="layui-form-item">
+                <label for="name" class="layui-form-label">
+                    <span class="x-red">*</span>角色名
+                </label>
+                <div class="layui-input-inline">
+                    <input type="text" id="name" name="name" required="" lay-verify="required"
+                           autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item layui-form-text">
+                <label class="layui-form-label">
+                    拥有权限
+                </label>
+                <table  class="layui-table layui-input-block">
+                    <tbody>
+                    <tr>
+                        <td>
+                            <input  lay-skin="primary" lay-filter="father" value="收支管理" disabled="true" >
+                        </td>
+                        <td>
+                            <div class="layui-input-block">
+                                <input name="id[]" lay-skin="primary" type="checkbox" value="65" title="收入详情">
+                                <input name="id[]" lay-skin="primary" type="checkbox" value="63" title="支出详情">
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input  lay-skin="primary" type="text"  value="账户总览" lay-filter="father" disabled="true">
+                        </td>
+                        <td>
+                            <div class="layui-input-block">
+                                <input name="id[]" lay-skin="primary" type="checkbox" value="75" title="理财详情">
+                                <input name="id[]" lay-skin="primary" type="checkbox" value="76" title="活期资产">
+                                <input name="id[]" lay-skin="primary" type="checkbox" value="77" title="负债详情">
+                                <input name="id[]" lay-skin="primary" type="checkbox" value="78" title="理财推荐">
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input  lay-skin="primary" type="text"  value="统计报表" lay-filter="father" disabled="true">
+                        </td>
+                        <td>
+                            <div class="layui-input-block">
+                                <input name="id[]" lay-skin="primary" type="checkbox" value="67" title="统计报表">
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input  lay-skin="primary" type="text"  value="家庭成员管理" lay-filter="father" disabled="true">
+                        </td>
+                        <td>
+                            <div class="layui-input-block">
+                                <input name="id[]" lay-skin="primary" type="checkbox" value="74" title="家庭成员管理">
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input  lay-skin="primary" type="text"  value="系统管理" lay-filter="father" disabled="true">
+                        </td>
+                        <td>
+                            <div class="layui-input-block">
+                                <input name="id[]" lay-skin="primary" type="checkbox" value="70" title="用户管理">
+                                <input name="id[]" lay-skin="primary" type="checkbox" value="71" title="用户管理">
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!--<div class="layui-form-item layui-form-text">
+                <label for="desc" class="layui-form-label">
+                    描述
+                </label>
+                <div class="layui-input-block">
+                    <textarea placeholder="请输入内容" id="desc" name="desc" class="layui-textarea"></textarea>
+                </div>
+            </div>-->
+            <div class="layui-form-item">
+                <button class="layui-btn layui-btn-fluid" lay-submit lay-filter="add" style="display:none;">立即提交</button>
+                <button class="layui-btn layui-btn-fluid" lay-submit lay-filter="update"  style="display:none; margin-left: 0;" >立即提交</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    var url = location.href;
+    if (url.indexOf("#2")!=-1){
+        $("button[lay-filter=update]").css("display","block");
+        var index = getQueryString("index");
+        initForm(parent.document.getElementsByTagName("tr")[index]);
+    }else {
+        $("button[lay-filter=add]").css("display","block");
+    }
+    layui.use(['form','layer'], function(){
+        $ = layui.jquery;
+        var form = layui.form
+            ,layer = layui.layer;
+
+        //自定义验证规则
+        form.verify({
+            nikename: function(value){
+                if(value.length < 5){
+                    return '昵称至少得5个字符啊';
+                }
+            }
+            ,pass: [/(.+){6,12}$/, '密码必须6到12位']
+            ,repass: function(value){
+                if($('#L_pass').val()!=$('#L_repass').val()){
+                    return '两次密码不一致';
+                }
+            }
+        });
+
+
+        //监听提交
+        form.on('submit(add)', function(data){
+            console.log(data);
+            //发异步，把数据提交
+            layer.confirm("确认添加？",{title:false,closeBtn:false,skin: 'layui-layer-molv'},function (layno) {
+                layer.close(layno);
+                $.post("/role/add",data.field,function (res) {
+                    if (res.code == 200){
+                        layer.msg(res.msg,{ time: 1000},function () {
+                            x_admin_close();
+                            parent.getRoles();
+                        });
+                    }else {
+                        layer.msg(res.msg)
+                    }
+                });
+            });
+           /* layer.alert("增加成功", {icon: 6},function () {
+                // 获得frame索引
+                var index = parent.layer.getFrameIndex(window.name);
+                //关闭当前frame
+                parent.layer.close(index);
+            });*/
+            return false;
+        });
+
+        //监听提交
+        form.on('submit(update)', function(data){
+            // console.log(data);
+            layer.confirm("确认修改？",{title:false,closeBtn:false,skin: 'layui-layer-molv'},function (layno) {
+                layer.close(layno);
+                $.post("/role/update",data.field,function (res) {
+                    if (res.code == 200){
+                        layer.msg(res.msg,{ time: 1000},function () {
+                            x_admin_close();
+                            parent.getRoles();
+                        });
+                    }else {
+                        layer.msg(res.msg)
+                    }
+                });
+            });
+            return false;   //防止form的action提交
+        });
+
+
+        form.on('checkbox(father)', function(data){
+
+            if(data.elem.checked){
+                $(data.elem).parent().siblings('td').find('input').prop("checked", true);
+                form.render();
+            }else{
+                $(data.elem).parent().siblings('td').find('input').prop("checked", false);
+                form.render();
+            }
+        });
+
+
+    });
+
+    function initForm(tr) {
+        // console.log(tr);
+        $("input[name=name]").val($(tr).find(":nth-child(2)").html());
+        var roleid = $(tr).find(":nth-child(3)").html();
+        $("input[name=roleid]").val($(tr).find(":nth-child(3)").html());
+        $.ajaxSettings.async = false;
+        $.get("/getAllPrivilege?roleId="+roleid,function (res) {
+            console.log(res);
+            if (res != ''){
+                s=',' + res + ',';//前后加限定符
+                var cb = document.getElementsByName('id[]');//这里改你checkbox的name值
+                for (var i = 0; i < cb.length; i++){
+                    if (s.indexOf( cb[i].value ) != -1) {
+                        cb[i].checked = true;
+                    }
+                }
+            }
+        });
+        $.ajaxSettings.async = true;
+
+
+
+    }
+</script>
+</body>
+<!--<body>
+<form class="layui-form layui-form-pane">
+    <div class="layui-form-item" lay-filter="bill-form">
+        <label class="layui-form-label">角色名称</label>
+        <div class="layui-input-block">
+            <input type="text" name="rolename" lay-verify="required" placeholder="请输入角色名" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <input type="hidden" name="roleid">
+    <div class="layui-form-item">
+        <button class="layui-btn layui-btn-fluid" lay-submit lay-filter="add" style="display:none;">立即提交</button>
+        <button class="layui-btn layui-btn-fluid" lay-submit lay-filter="update"  style="display:none; margin-left: 0;" >立即提交</button>
+        <button type="reset" id="resetForm" style="display: none;">重置</button>
+    </div>
+</form>
+<script>
+    var url = location.href;
+    if (url.indexOf("#2")!=-1){
+        $("button[lay-filter=update]").css("display","block");
+        var index = getQueryString("index");
+        initForm(parent.document.getElementsByTagName("tr")[index]);
+    }else {
+        $("button[lay-filter=add]").css("display","block");
+    }
+
+    layui.use(['form','layer'], function(){
+        $ = layui.jquery;
+        var form = layui.form
+            ,layer = layui.layer;
+
+        //监听提交
+        form.on('submit(add)', function(data){
+            // console.log(data);
+            layer.confirm("确认添加？",{title:false,closeBtn:false,skin: 'layui-layer-molv'},function (layno) {
+                layer.close(layno);
+                $.post("/role/add",data.field,function (res) {
+                    if (res.code == 200){
+                        layer.msg(res.msg,{ time: 1000},function () {
+                            x_admin_close();
+                            parent.getRoles();
+                        });
+                    }else {
+                        layer.msg(res.msg)
+                    }
+                });
+            });
+            return false;   //防止form的action提交
+        });
+        //监听提交
+        form.on('submit(update)', function(data){
+            // console.log(data);
+            layer.confirm("确认修改？",{title:false,closeBtn:false,skin: 'layui-layer-molv'},function (layno) {
+                layer.close(layno);
+                $.post("/role/update",data.field,function (res) {
+                    if (res.code == 200){
+                        layer.msg(res.msg,{ time: 1000},function () {
+                            x_admin_close();
+                            parent.getRoles();
+                        });
+                    }else {
+                        layer.msg(res.msg)
+                    }
+                });
+            });
+            return false;   //防止form的action提交
+        });
+    });
+
+    function initForm(tr) {
+        // console.log(tr);
+        $("input[name=rolename]").val($(tr).find(":nth-child(2)").html());
+        $("input[name=roleid]").val($(tr).find(":nth-child(3)").html());
+    }
+</script>
+</body>-->
+
+</html>

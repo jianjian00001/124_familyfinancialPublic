@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>资产添加</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+          content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8"/>
+    <link rel="stylesheet" href="/static/css/font.css">
+    <link rel="stylesheet" href="/static/css/xadmin.css">
+    <script type="text/javascript" src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/lib/layui/layui.js" charset="utf-8"></script>
+    <script type="text/javascript" src="/static/js/xadmin.js"></script>
+    <script type="text/javascript" src="/static/js/index.js"></script>
+    <style>
+        .layui-form{
+            padding: 20px 50px;
+        }
+    </style>
+</head>
+
+<body>
+<form class="layui-form layui-form-pane">
+    <div class="layui-form-item" lay-filter="bill-form">
+        <label class="layui-form-label">资产名称</label>
+        <div class="layui-input-block">
+            <input type="text" name="name" lay-verify="required" placeholder="请输入资产名称" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">金额</label>
+        <div class="layui-input-block">
+            <input type="text" name="money" lay-verify="required|number" placeholder="请输入金额" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <!--<div class="layui-form-item">
+        <label class="layui-form-label">备注</label>
+        <div class="layui-input-block">
+                <input type="text" name="rate" lay-verify="required" placeholder="请输入备注" autocomplete="off" class="layui-input">
+        </div>
+    </div>-->
+    <div class="layui-form-item">
+        <div class="layui-input-block" style="margin-left: 0;">
+            <textarea name="remark" placeholder="说点什么？" class="layui-textarea" autocomplete="off"></textarea>
+        </div>
+    </div>
+    <input type="hidden" name="id">
+    <div class="layui-form-item">
+        <button class="layui-btn layui-btn-fluid" lay-submit lay-filter="add" style="display:none;" >立即提交</button>
+        <button class="layui-btn layui-btn-fluid" lay-submit lay-filter="update"  style="display:none; margin-left: 0;" >立即提交</button>
+        <button type="reset" id="resetForm" style="display: none;">重置</button>
+    </div>
+</form>
+<script>
+
+    getAllPayways();
+    var url = location.href;
+    if (url.indexOf("#2")!=-1){
+        $("button[lay-filter=update]").css("display","block");
+        var index = getQueryString("index");
+        initForm(parent.document.getElementsByTagName("tr")[index]);
+    }else {
+        if(url.indexOf("#3")!=-1){
+            initForm();
+        }
+        $("button[lay-filter=add]").css("display","block");
+    }
+
+    layui.use(['form','layer'], function(){
+        $ = layui.jquery;
+        var form = layui.form
+            ,layer = layui.layer;
+
+
+        //自定义验证规则
+        form.verify({
+            payway: function(value){
+                if(value == -1){
+                    return '请选择支付方式';
+                }
+            }
+        });
+
+        //监听提交
+        form.on('submit(add)', function(data){
+            // console.log(data);
+            $.post("/curaccount/addBill",data.field,function (res) {
+                if (res.code == 200){
+                    layer.confirm("记录成功！",{title:false,closeBtn:false,skin: 'layui-layer-molv',btn:["再记一笔","取消"]},function (layno) {
+                        layer.close(layno);
+                        $("#resetForm").click();
+                    },function () {
+                        layer.msg(res.msg,{ time: 1000},function () {
+                            x_admin_close();
+                            if (parent.location.href.indexOf("details.html")!=-1){
+                                parent.getBills();
+                            } else {
+                                parent.document.getElementById("home").src="welcome";
+                            }
+                        });
+                    });
+                }else {
+                    layer.msg(res.msg)
+                }
+            })
+            return false; //防止form的action提交
+        });
+
+        //监听提交
+        form.on('submit(update)', function(data){
+            // console.log(data);
+            layer.confirm("确认修改？",{title:false,closeBtn:false,skin: 'layui-layer-molv'},function (layno) {
+                layer.close(layno);
+                $.post("/curaccount/updateBill",data.field,function (res) {
+                    if (res.code == 200){
+                        layer.msg(res.msg,{ time: 1000},function () {
+                            x_admin_close();
+                            parent.getBills();
+                        });
+                    }else {
+                        layer.msg(res.msg)
+                    }
+                });
+            });
+            return false;   //防止form的action提交
+        });
+    });
+
+    function initForm(tr) {
+        // console.log(tr);
+        if (tr==undefined){
+            $("input[name=title]").val("工资");
+            var date = new Date();
+            var dateStr = date.getFullYear()+"年"+(date.getMonth()+1)+"月份";
+            $("textarea[name=remark]").val(dateStr+"工资");
+            return;
+        }else {
+            $("input[name=name]").val($(tr).find(":nth-child(3)").html());
+            $("input[name=money]").val($(tr).find(":nth-child(4)").html());
+            $("input[name=rate]").val($(tr).find(":nth-child(5)").html());
+            //var payway = $(tr).find(":nth-child(5)").html();
+            //$("#payway").find("option:contains("+payway+")").prop("selected",true);
+            //$("textarea[name=remark]").val($(tr).find(":nth-child(6)").html());
+            $("input[name=id]").val($(tr).find(":nth-child(6)").html());
+        }
+    }
+</script>
+</body>
+
+</html>

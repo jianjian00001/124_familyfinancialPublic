@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 设置为IUserDao接口方法提供sql语句配置 -->
+<mapper namespace="com.xust.ffms.dao.UserInfoMapper">
+
+    <select id="getUserInfo" resultType="com.xust.ffms.entity.UserInfo" parameterType="com.xust.ffms.entity.UserInfo">
+        SELECT * FROM user
+        <where>
+             username = #{username}
+        </where>
+    </select>
+
+    <select id="userIsExisted" resultType="java.lang.Integer" parameterType="com.xust.ffms.entity.UserInfo">
+        SELECT count(*) FROM user where username = #{username}
+    </select>
+
+
+    <select id="getUsersByWhere" resultType="com.xust.ffms.entity.UserInfo" parameterType="com.xust.ffms.entity.UserInfo">
+        SELECT *, rolename FROM user left join role on role.roleid = user.roleid
+        <where>
+            <if test="data.username!=null">(username = #{data.username} or realname = #{data.realname})</if>
+            <if test="data.roleid!=null and data.roleid!=-1">and user.roleid = #{data.roleid}</if>
+            <if test="data.houseid!=null and data.houseid.length!=0">and houseid = #{data.houseid}</if>
+        </where>
+        order by user.roleid asc
+        limit #{beginIndex},#{pageSize}
+    </select>
+
+    <select id="getToatlByWhere" resultType="java.lang.Integer" parameterType="com.xust.ffms.utils.PageModel">
+        SELECT count(id) FROM user left join role on role.roleid = user.roleid
+        <where>
+            <if test="data.username!=null">(username = #{data.username} or realname = #{data.realname})</if>
+            <if test="data.roleid!=null and data.roleid!=-1">and user.roleid = #{data.roleid}</if>
+            <if test="data.houseid!=null and data.houseid.length!=0">and houseid = #{data.houseid}</if>
+        </where>
+    </select>
+
+    <select id="getAllRoles" resultType="com.xust.ffms.entity.Role" parameterType="com.xust.ffms.entity.Role">
+        select * from role
+    </select>
+
+    <insert id="add" parameterType="com.xust.ffms.entity.UserInfo" useGeneratedKeys="true" keyProperty="id">
+        insert into user(id,username,password,roleid,realname,houseid,photo)
+          values(#{id},#{username},#{password},#{roleid},#{realname},#{houseid},#{iconUrl})
+    </insert>
+
+    <update id="update" parameterType="com.xust.ffms.entity.UserInfo">
+        update user
+        <set>
+            <if test="password!=null and password.length()>0"> password = #{password}, </if>
+            <if test="realname!=null and realname.length()>0"> realname = #{realname}, </if>
+            <if test="houseid!=null and houseid.length()>0"> houseid = #{houseid}, </if>
+            <if test="iconUrl!=null and iconUrl.length()>0"> photo = #{iconUrl}, </if>
+            <if test="roleid !=null "> roleid = #{roleid}, </if>
+        </set>
+        where id=#{id}
+    </update>
+
+    <update id="changePassword">
+        update user
+        <set>
+            <if test="newPassword!=null and newPassword.length()>0"> password = #{newPassword}, </if>
+        </set>
+        where id=#{id}
+    </update>
+    <delete id="delete">
+        delete from user where id=#{id}
+    </delete>
+
+    <insert id="addRole" parameterType="com.xust.ffms.entity.Role" useGeneratedKeys="true" keyProperty="roleid">
+        insert into role(roleid,rolename)
+          values(null,#{rolename})
+    </insert>
+
+    <update id="updateRole" parameterType="com.xust.ffms.entity.Role">
+        update role set rolename = #{rolename} where roleid=#{roleid}
+    </update>
+
+    <delete id="deleteRole">
+        delete from role where roleid=#{id}
+    </delete>
+    <delete id="deletePrivilege">
+        delete  from roleprivilieges  where roleid=#{id}
+    </delete>
+
+    <select id="getRoleById" resultType="com.xust.ffms.entity.Role">
+        select * from role where roleid=#{id}
+    </select>
+    <select id="getAllPrivilege" resultType="java.lang.String">
+        select privilegeID from roleprivilieges where roleid=#{id}
+    </select>
+    <select id="selectRoleByName" resultType="com.xust.ffms.entity.Role">
+        select * from role where rolename = #{name} and roleid != #{id}
+    </select>
+
+    <select id="selectRoleByName1" resultType="com.xust.ffms.entity.Role">
+        select * from role where rolename = #{name}
+    </select>
+
+    <insert id="addHouseId" useGeneratedKeys="true" keyProperty="id">
+        insert into house values(null,#{ownerid},#{address})
+    </insert>
+    <insert id="insertPrivileges">
+        insert into roleprivilieges values(null,#{roleid},#{id})
+    </insert>
+    <insert id="addRole1" parameterType="com.xust.ffms.entity.Role" >
+        insert into role(roleid,rolename)
+          values(#{roleid},#{rolename})
+    </insert>
+
+
+</mapper>

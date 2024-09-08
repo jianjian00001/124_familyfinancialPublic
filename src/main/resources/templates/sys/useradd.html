@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>账单添加</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+          content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8"/>
+
+    <link rel="stylesheet" href="/static/css/font.css">
+    <link rel="stylesheet" href="/static/css/xadmin.css">
+    <script type="text/javascript" src="/static/js/index.js"></script>
+    <script type="text/javascript" src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/lib/layui/layui.js" charset="utf-8"></script>
+    <script type="text/javascript" src="/static/js/xadmin.js"></script>
+    <style>
+        .layui-form {
+            padding: 20px 50px;
+        }
+    </style>
+</head>
+
+<body>
+<form class="layui-form layui-form-pane">
+    <div class="layui-form-item" lay-filter="bill-form">
+        <label class="layui-form-label">用户名</label>
+        <div class="layui-input-block">
+            <input type="text" name="username" lay-verify="required" placeholder="请输入用户名" autocomplete="off"
+                   class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">初始密码</label>
+        <div class="layui-input-block">
+            <input type="text" name="password" lay-verify="required" placeholder="请输入密码" value="123456"
+                   autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">姓名</label>
+        <div class="layui-input-block">
+            <input type="text" name="realname" lay-verify="required" placeholder="请输入真实姓名" autocomplete="off"
+                   class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">角色</label>
+        <div class="layui-input-block">
+            <select name="roleid" id="roleid" lay-verify="required">
+                <option value="">选择用户角色</option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">家庭编号</label>
+        <div class="layui-input-block">
+            <input type="text" name="houseid" readonly autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <input type="hidden" name="id">
+    <div class="layui-form-item">
+        <button class="layui-btn layui-btn-fluid" lay-submit lay-filter="add" style="display:none;">立即提交</button>
+        <button class="layui-btn layui-btn-fluid" lay-submit lay-filter="update" style="display:none; margin-left: 0;">
+            立即提交
+        </button>
+        <button type="reset" id="resetForm" style="display: none;">重置</button>
+    </div>
+</form>
+<script>
+
+
+    layui.use(['form', 'layer'], function () {
+        $ = layui.jquery;
+        var form = layui.form
+            , layer = layui.layer;
+        initRoles();
+        //系统管理员可以添加成员时，可以选择角色-家主
+        if (top.sessionUser.roleid == 2) {
+            $("input[name=houseid]").val(top.sessionUser.houseid);
+            //家主，默认只能添加普通用户
+            $("select[name=roleid]").parent().parent().css("display", "none");
+            $("#roleid option[value='3']").attr("selected", true);
+        } else {
+            $("input[name=houseid]").parent().parent().css("display", "none");
+        }
+        var url = location.href;
+        // console.log(url);
+        if (url.indexOf("#2") != -1) {
+            $("input[name=username]").parent().parent().css("display", "none");
+            $("button[lay-filter=update]").css("display", "block");
+            var index = getQueryString("index");
+            initForm(parent.document.getElementsByTagName("tr")[index]);
+        } else {
+            $("button[lay-filter=add]").css("display", "block");
+        }
+
+
+        // form.verify({
+        //     role: function(value, item){ //value：表单的值、item：表单的DOM对象
+        //         if (value == -1){
+        //             return "请选择角色";
+        //         }
+        //     }
+        //     //我们既支持上述函数式的方式，也支持下述数组的形式
+        //     //数组的两个值分别代表：[正则匹配、匹配不符时的提示文字]
+        //     // ,pass: [
+        //     //     /^[\S]{6,12}$/
+        //     //     ,'密码必须6到12位，且不能出现空格'
+        //     // ]
+        // });
+
+        //监听提交
+        form.on('submit(add)', function (data) {
+            // console.log(data);
+            layer.confirm("确认添加？", {title: false, closeBtn: false, skin: 'layui-layer-molv'}, function (layno) {
+                layer.close(layno);
+                $.post("/user/add", data.field, function (res) {
+                    if (res.code == 200) {
+                        layer.msg(res.msg, {time: 1000}, function () {
+                            x_admin_close();
+                            parent.getUsers();
+                        });
+                    } else {
+                        layer.msg(res.msg)
+                    }
+                });
+            });
+            return false;   //防止form的action提交
+        });
+        //监听修改
+        form.on('submit(update)', function (data) {
+            // console.log(data.field);
+            layer.confirm("确认修改？", {title: false, closeBtn: false, skin: 'layui-layer-molv'}, function (layno) {
+                layer.close(layno);
+                data.field.password = null;
+                $.post("/user/update", data.field, function (res) {
+                    if (res.code == 200) {
+                        layer.msg(res.msg, {time: 1000}, function () {
+                            x_admin_close();
+                            parent.getUsers();
+                        });
+                    } else {
+                        layer.msg(res.msg)
+                    }
+                });
+            });
+            return false;   //防止form的action提交
+        }
+
+        );
+
+
+        function initForm(tr) {
+            // console.log(tr);
+            $("input[name=username]").val($(tr).find(":nth-child(2)").html());
+            $("input[name=realname]").val($(tr).find(":nth-child(3)").html());
+            $("input[name=password]").parent().parent().css("display", "none");
+            $("textarea[name=houseid]").val($(tr).find(":nth-child(6)").html());
+            $("input[name=id]").val($(tr).find(":nth-child(6)").html());
+        }
+
+        function initRoles() {
+            var html = "", html2 = "";
+            $.ajaxSettings.async = false;
+            $.post("/getAllRoles", function (res) {
+                if (res.code == 200) {
+                    $.each(res.datas, function (index, item) {
+                        // if (item.roleid > top.sessionUser.roleid) {
+                        html += "<option value=" + item.roleid + ">" + item.rolename + "</option>";
+                        html2 += "<dd lay-value=" + item.roleid + " class>" + item.rolename + "</dd>";
+                        // }
+                    });
+                    $("#roleid").append(html);
+                    $(".layui-anim-upbit").append(html2);
+                    form.render('select');
+                }
+            })
+            $.ajaxSettings.async = true;
+        } });
+
+</script>
+</body>
+
+</html>

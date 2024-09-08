@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 设置为IUserDao接口方法提供sql语句配置 -->
+<mapper namespace="com.xust.ffms.dao.ProductMapper">
+    <insert id="add">
+        insert into product(id,name,level,remark,loss)
+          value(null,#{name},#{level},#{remark},#{loss})
+    </insert>
+    <update id="update">
+        update product
+        <set>
+            <if test="name!=null"> name = #{name}, </if>
+            <if test="level!=null"> level = #{level}, </if>
+            <if test="remark!=null"> remark = #{remark}, </if>
+            <if test="loss!=null"> loss = #{loss},</if>
+        </set>
+        where id = #{id}
+    </update>
+    <delete id="del">
+        delete from product where id = #{id}
+    </delete>
+
+
+    <select id="getProducts" resultType="com.xust.ffms.entity.Product">
+        select product.* from product
+        <where>
+            <if test="data.level !=null and data.level != '' "> and product.level = #{data.level}</if>
+        </where>
+        limit #{beginIndex},#{pageSize}
+    </select>
+    <select id="getProductsTotal" resultType="java.lang.Integer">
+        select count(id) from product
+        <where>
+            <if test="data.level !=null and data.level != '' "> and product.level = #{data.level}</if>
+        </where>
+    </select>
+    <select id="findByWhereNoPage" resultType="com.xust.ffms.entity.Product">
+        select product.* from product
+        <where>
+            <if test="data.level !=null and data.level != '' "> and product.level = #{data.level}</if>
+        </where>
+    </select>
+</mapper>

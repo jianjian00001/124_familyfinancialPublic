@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>家庭财务管理系统</title>
+    <meta name="renderer" content="webkit|ie-comp|ie-stand">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8,target-densitydpi=low-dpi" />
+    <meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+    <link rel="stylesheet" href="../static/css/font.css">
+    <link rel="stylesheet" href="../static/css/xadmin.css">
+    <script type="text/javascript" src="../static/js/jquery.min.js"></script>
+    <script src="../static/lib/layui/layui.js" charset="utf-8"></script>
+    <script type="text/javascript" src="../static/js/xadmin.js"></script>
+
+</head>
+<body class="login-bg">
+
+<div class="login layui-anim layui-anim-up">
+    <div class="message">家庭财务管理系统</div>
+    <div id="darkbannerwrap"></div>
+
+    <form method="post" class="layui-form" >
+        <input name="username" placeholder="用户名"  type="text" lay-verify="required" class="layui-input" >
+        <hr class="hr15">
+        <input name="password" lay-verify="required" placeholder="初始密码"  type="password"  class="layui-input">
+        <hr class="hr15">
+        <input name="realname" placeholder="姓名"  type="text"  class="layui-input" >
+        <hr class="hr15">
+        <input name="roleid" id="roleid" placeholder="角色"  type="text"  class="layui-input" >
+        <hr class="hr15">
+        <input value="注册" lay-submit lay-filter="register" style="width:100%;" type="submit">
+        <hr class="hr20" >
+    </form>
+    <div><!--class="bottom-link" -->
+        已有账户<a href="/login.html">立刻登录</a>
+    </div>
+</div>
+
+<script>
+    $("input[name=roleid]").css("display", "none");
+    $("input[name=roleid]").val(2);
+
+    $(function  () {
+        layui.use('form', function(){
+            var form = layui.form;
+            // layer.msg('玩命卖萌中', function(){
+            //   //关闭后的操作
+            //   });
+            //监听提交
+            form.on('submit(register)', function(data){
+                $.post("/register.do",data.field,function(res){
+                    if(res.code == 200){
+                        layer.msg("注册成功，正在跳转...",{time:800},function () {
+                            top.location.href='/login.html';
+                        });
+                    }else {
+                        layer.msg(res.msg)
+                    }
+                },"json");
+                return false;
+            });
+        });
+    })
+
+    /*$('#pass').keyup(function(e) {
+        var strongRegex = new RegExp("^(?=.{8,})(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*\\W).*$", "g");
+        var mediumRegex = new RegExp("^(?=.{7,})(((?=.*[A-Z])(?=.*[a-z]))|((?=.*[A-Z])(?=.*[0-9]))|((?=.*[a-z])(?=.*[0-9]))).*$", "g");
+        var enoughRegex = new RegExp("(?=.{6,}).*", "g");
+        if (false == enoughRegex.test($(this).val())) {
+            $('#passstrength').html('More Characters');
+        } else if (strongRegex.test($(this).val())) {
+            $('#passstrength').className = 'ok';
+            $('#passstrength').html('Strong!');
+        } else if (mediumRegex.test($(this).val())) {
+            $('#passstrength').className = 'alert';
+            $('#passstrength').html('Medium!');
+        } else {
+            $('#passstrength').className = 'error';
+            $('#passstrength').html('Weak!');
+        }
+        return true;
+    });*/
+
+
+</script>
+
+</body>
+</html>

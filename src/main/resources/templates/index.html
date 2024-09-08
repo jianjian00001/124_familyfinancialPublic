@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>家庭理财管理系统</title>
+    <meta name="renderer" content="webkit|ie-comp|ie-stand">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport"
+          content="width=device-width,user-scalable=yes, minimum-scale=0.4, initial-scale=0.8"/>
+    <meta http-equiv="Cache-Control" content="no-siteapp"/>
+    <link rel="stylesheet" href="/static/css/font.css">
+    <link rel="stylesheet" href="/static/css/xadmin.css">
+    <script type="text/javascript" src="/static/js/jquery.min.js"></script>
+    <script src="/static/lib/layui/layui.js" charset="utf-8"></script>
+    <style>
+        .container{
+            background: #eb7350;
+        }
+    </style>
+</head>
+<body>
+<!-- 顶部开始 -->
+<div class="container">
+    <div class="logo"><a href="index">家庭理财管理系统</a></div>
+    <div class="left_open">
+        <i title="展开左侧栏" class="iconfont">&#xe697;</i>
+    </div>
+    <!--<ul class="layui-nav left fast-add" lay-filter="">
+        <li class="layui-nav-item">
+            <a href="javascript:;"><i title="新增" class="iconfont">&#xe6b9;</i> 新增</a>
+            <dl class="layui-nav-child" id="fast_add"> &lt;!&ndash; 二级菜单 &ndash;&gt;
+                <dd><a onclick="x_admin_show('新增 - 收入信息','/pages/income_add','460px','70%')"><i class="iconfont">&#xe702;</i>收入信息</a></dd>
+                <dd><a onclick="x_admin_show('新增 - 支出信息','/pages/pay_add','460px','70%')"><i class="iconfont">&#xe698;</i>支出信息</a></dd>
+                &lt;!&ndash;<dd><a onclick="x_admin_show('新增 - 成员信息','/pages/sys_useradd','460px','70%')"><i class="iconfont">&#xe6b8;</i>成员信息</a></dd>&ndash;&gt;
+            </dl>
+        </li>
+    </ul>-->
+    <ul class="layui-nav right" style="margin-right: 20px" lay-filter="">
+        <li class="layui-nav-item"><span id="role">您的身份是：</span></li>
+        <li class="layui-nav-item">
+            <a href="javascript:;" id="username" style="color:#FFB800;"></a>
+            <dl class="layui-nav-child"> <!-- 二级菜单 -->
+                <!--<dd><a onclick="x_admin_show('个人信息','http://www.baidu.com')">-->
+                    <!--<i title="个人信息" class="iconfont">&#xe6b8;</i>个人信息</a></dd>-->
+                <dd><a href=javascript:; onclick="layer.confirm('退出系统？',{title: false, closeBtn: false, skin: 'layui-layer-molv'}, function(index) {
+                location.href='/logout';
+              })"><i title="安全退出" class="iconfont">&#xe718;</i>安全退出</a></dd>
+                <dd><a onclick="x_admin_show('修改密码','/pages/sys_password','460px','70%')" ><i title="安全退出" class="iconfont">&#59435;</i>修改密码</a></dd>
+            </dl>
+        </li>
+    </ul>
+
+</div>
+<!-- 顶部结束 -->
+<!-- 中部开始 -->
+<!-- 左侧菜单开始 -->
+<div class="left-nav">
+    <div id="side-nav">
+        <ul id="nav">
+
+        </ul>
+    </div>
+</div>
+<!-- <div class="x-slide_left"></div> -->
+<!-- 左侧菜单结束 -->
+<!-- 右侧主体开始 -->
+<div class="page-content">
+    <div class="layui-tab tab" lay-filter="xbs_tab" lay-allowclose="false">
+        <ul class="layui-tab-title">
+            <li class="home"><i class="layui-icon">&#xe66e;</i>我的主页</li>
+        </ul>
+        <div class="layui-tab-content">
+            <div class="layui-tab-item layui-show">
+                <iframe id="home" src='welcome' frameborder="0" scrolling="yes" class="x-iframe"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="page-content-bg"></div>
+<!-- 右侧主体结束 -->
+<!-- 中部结束 -->
+<!-- 底部开始 -->
+<!--<div class="footer">
+    <div class="copyright">Copyright ©2020 家庭财务管理系统 DarlingZhangsh@outlook.com</div>
+</div>-->
+<!-- 底部结束 -->
+</body>
+
+<script>
+    var sessionUser;
+    $(function () {
+        $.ajaxSettings.async = false;
+        $.get("/getSessionUser", function (data) {
+            sessionUser = data;
+        })
+        $.ajaxSettings.async = false;
+        initData();
+        $("li.home").click(function () {
+            $("#home").attr("src","welcome");
+        });
+    });
+
+    function initData() {
+        $("#username").append(sessionUser.realname);
+
+        if (sessionUser.roleid == 1) {
+            $("#role").append("系统管理员");
+        } else if (sessionUser.roleid == 2) {
+            $("#role").append("家庭管理员");
+        }  else if(sessionUser.roleid == 3){
+            $("#role").append("普通用户");
+            $("#fast_add :nth-child(3)").css("display","none");
+        }
+
+        //加载菜单
+        //加载一级菜单
+        var privileges = sessionUser.privileges;
+        var htmlOne="";
+        for (var i = 0; i < privileges.length; i++) {
+            var privilege = privileges[i];
+            if (privilege.privilegeTipflag == 0){
+                htmlOne +=
+                    '<li id = '+privilege.privilegeNumber+' >' +
+                    '   <a href="javascript:;">' +
+                    '       <i class="iconfont">'+privilege.icon+'</i>' +
+                    '       <cite>'+privilege.privilegeName+'</cite>\n' +
+                    '       <i class="iconfont nav_right">&#xe6a7;</i>' +
+                    '   </a>' +
+                    '</li>';
+            }
+        }
+        $("#nav").html(htmlOne);
+
+        //加载二级菜单
+        $("#nav li").each(function () {
+            var htmlTwo = '<ul class="sub-menu">';
+            var id = this.id;
+            $.each(privileges,function (i,item) {
+                if (item.privilegeTipflag==1 && item.privilegeNumber.substring(0,3) == id){
+                    // console.log(item);
+                    htmlTwo +=
+                        '<li>' +
+                        '    <a _href='+item.privilegeUrl+'.html >' +
+                        '        <i class="iconfont">'+item.icon+'</i>' +
+                        '        <cite>'+item.privilegeName+'</cite>' +
+                        '    </a>' +
+                        '</li>';
+                }
+            });
+            htmlTwo += "</ul>";
+            // console.log(htmlTwo);
+            $("#"+id).append(htmlTwo);
+        });
+    }
+</script>
+<script type="text/javascript" src="/static/js/xadmin.js"></script>
+
+</html>

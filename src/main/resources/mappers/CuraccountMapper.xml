@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xust.ffms.dao.CuraccountMapper">
+
+
+    <insert id="add" parameterType="com.xust.ffms.entity.Curaccount" useGeneratedKeys="true" keyProperty="id">
+        insert into curaccount(id,name,userid,money,houseid,remark)
+          value(null,#{name},#{userid},#{money},#{houseid},#{remark})
+    </insert>
+
+    <update id="update" parameterType="com.xust.ffms.entity.Curaccount">
+        update curaccount
+        <set>
+            <if test="money!=null"> money = #{money}, </if>
+            <if test="name!=null"> name = #{name}, </if>
+            <if test="remark!=null"> remark = #{remark}, </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="del">
+        delete from curaccount where id = #{id}
+    </delete>
+
+    <select id="findByWhereNoPage" resultType="com.xust.ffms.entity.Curaccount" parameterType="com.xust.ffms.entity.Curaccount">
+        select m.* from curaccount m left join user on m.userid = user.id
+        <where>
+            <if test="houseid!=null"> and userid in (select id from user where houseid = #{houseid})</if>
+            <if test="userid!=null"> and userid = #{userid}</if>
+            <if test="name!=null"> and name = #{name}</if>
+            <if test="realname!=null"> and realname = #{realname}</if>
+        </where>
+    </select>
+
+    <select id="findByWhere" resultType="com.xust.ffms.entity.Curaccount" parameterType="com.xust.ffms.utils.PageModel">
+        select m.* , user.realname from curaccount m left join user on m.userid = user.id
+        <where>
+            <if test="data.houseid!=null"> and userid in (select id from user where houseid = #{data.houseid})</if>
+            <if test="data.userid!=null"> and m.userid = #{data.userid}</if>
+            <if test="data.realname!=null and data.realname!=''"> and realname like concat('%',#{data.realname},'%')</if>
+            <if test="data.name!=null and data.name!= ''"> and m.name like concat('%',#{data.name},'%')</if>
+        </where>
+        limit #{beginIndex},#{pageSize}
+    </select>
+
+
+    <select id="getTotalByWhere" resultType="java.lang.Integer" parameterType="com.xust.ffms.utils.PageModel">
+        select count(m.id) from curaccount m left join user on m.userid = user.id
+        <where>
+            <if test="data.houseid!=null"> and userid in (select id from user where houseid = #{data.houseid})</if>
+            <if test="data.userid!=null"> and m.userid = #{data.userid}</if>
+            <if test="data.realname!=null "> and realname like concat('%',#{data.realname},'%')</if>
+        </where>
+    </select>
+    <select id="queryOneByBill" resultType="com.xust.ffms.entity.Curaccount" parameterType="com.xust.ffms.entity.Curaccount">
+        select * from curaccount m left join user on m.userid = user.id
+        <where>
+            <if test="houseid !=null"> and m.houseid = #{houseid}</if>
+            <if test="userid!=null "> and m.userid = #{userid}</if>
+        </where>
+    </select>
+    <select id="getMoney" resultType="java.lang.String">
+        SELECT sum(money) FROM `curaccount` where userid = #{userid}
+    </select>
+
+</mapper>

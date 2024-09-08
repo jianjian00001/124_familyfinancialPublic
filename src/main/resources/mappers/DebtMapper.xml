@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xust.ffms.dao.DebtMapper">
+
+
+
+    <insert id="add" parameterType="com.xust.ffms.entity.Debt" useGeneratedKeys="true" keyProperty="id">
+        insert into debt(id,name,userid,residue,curperiod,houseid)
+          value(null,#{name},#{userid},#{residue},#{curperiod},#{houseid})
+    </insert>
+
+    <update id="update" parameterType="com.xust.ffms.entity.Debt">
+        update debt
+        <set>
+            <if test="residue!=null"> residue = #{residue}, </if>
+            <if test="name!=null"> name = #{name}, </if>
+            <if test="curperiod!=null"> curperiod = #{curperiod}, </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="del">
+        delete from debt where id = #{id}
+    </delete>
+
+    <select id="findByWhereNoPage" resultType="com.xust.ffms.entity.Debt" parameterType="com.xust.ffms.entity.Debt">
+        select m.* from debt m left join user on m.userid = user.id
+        <where>
+            <if test="houseid!=null"> and userid in (select id from user where houseid = #{houseid})</if>
+            <if test="userid!=null"> and userid = #{userid}</if>
+            <if test="name!=null"> and name = #{name}</if>
+            <if test="realname!=null"> and realname = #{realname}</if>
+        </where>
+    </select>
+
+    <select id="findByWhere" resultType="com.xust.ffms.entity.Debt" parameterType="com.xust.ffms.utils.PageModel">
+        select m.* , user.realname from debt m left join user on m.userid = user.id
+        <where>
+            <if test="data.houseid!=null"> and userid in (select id from user where houseid = #{data.houseid})</if>
+            <if test="data.userid!=null"> and m.userid = #{data.userid}</if>
+            <if test="data.realname!=null and data.realname!=''"> and realname like concat('%',#{data.realname},'%')</if>
+            <if test="data.name!=null and data.name!= ''"> and m.name like concat('%',#{data.name},'%')</if>
+        </where>
+        limit #{beginIndex},#{pageSize}
+    </select>
+
+
+    <select id="getTotalByWhere" resultType="java.lang.Integer" parameterType="com.xust.ffms.utils.PageModel">
+        select count(m.id) from debt m left join user on m.userid = user.id
+        <where>
+            <if test="data.houseid!=null"> and userid in (select id from user where houseid = #{data.houseid})</if>
+            <if test="data.userid!=null"> and m.userid = #{data.userid}</if>
+            <if test="data.realname!=null "> and realname like concat('%',#{data.realname},'%')</if>
+        </where>
+    </select>
+
+
+</mapper>
